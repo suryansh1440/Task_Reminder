@@ -32,84 +32,119 @@ $upcoming_tasks = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Reminder System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Poppins', 'sans-serif'],
                     },
                     colors: {
                         primary: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
                         },
                         secondary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
                         }
-                    }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'bounce-slow': 'bounce 3s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        bounce: {
+                            '0%, 100%': { transform: 'translateY(-5%)' },
+                            '50%': { transform: 'translateY(0)' },
+                        },
+                    },
                 },
             },
         }
     </script>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-gradient-to-br from-primary-50 to-secondary-50 font-sans min-h-screen">
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg">
+    <nav class="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-50 animate-fade-in">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <h1 class="text-2xl font-bold text-primary-600">TaskReminder</h1>
+                        <div class="flex items-center space-x-2">
+                            <svg class="h-8 w-8 text-primary-600 animate-bounce-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            <h1 class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">TaskReminder</h1>
+                        </div>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                         <a href="index.php" class="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Dashboard
                         </a>
-                        <a href="tasks/create.php" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="tasks/create.php" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
                             New Task
                         </a>
-                        <a href="tasks/list.php" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="tasks/list.php" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200">
                             All Tasks
                         </a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-gray-700">Welcome, <?php echo htmlspecialchars($user['name']); ?></span>
-                    <a href="auth/logout.php" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
-                        Logout
-                    </a>
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none">
+                            <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                                <span class="text-primary-600 font-medium"><?php echo strtoupper(substr($user['name'], 0, 1)); ?></span>
+                            </div>
+                            <span><?php echo htmlspecialchars($user['name']); ?></span>
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                            <a href="profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                            <a href="auth/logout.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <div class="bg-gradient-to-r from-primary-500 to-primary-600">
+    <div class="bg-gradient-to-r from-primary-500 to-secondary-500 animate-fade-in">
         <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
             <div class="text-center">
-                <h1 class="text-3xl font-extrabold text-white sm:text-4xl">
+                <h1 class="text-4xl font-extrabold text-white sm:text-5xl animate-slide-up">
                     Stay Organized, Stay Productive
                 </h1>
-                <p class="mt-4 text-lg text-primary-100">
+                <p class="mt-4 text-lg text-white/90 animate-slide-up" style="animation-delay: 0.2s">
                     Manage your tasks efficiently with our smart reminder system
                 </p>
             </div>
@@ -122,11 +157,11 @@ $upcoming_tasks = $stmt->fetchAll();
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 <!-- Total Tasks Card -->
-                <div class="bg-white overflow-hidden shadow rounded-lg transform transition duration-500 hover:scale-105">
-                    <div class="p-5">
+                <div class="bg-white/90 backdrop-blur-md overflow-hidden shadow-lg rounded-xl transform transition duration-500 hover:scale-105 hover:shadow-xl animate-slide-up" style="animation-delay: 0.3s">
+                    <div class="p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-primary-100 rounded-md p-3">
+                                <div class="bg-primary-100 rounded-xl p-3">
                                     <svg class="h-6 w-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                     </svg>
@@ -137,7 +172,7 @@ $upcoming_tasks = $stmt->fetchAll();
                                     <dt class="text-sm font-medium text-gray-500 truncate">
                                         Total Tasks
                                     </dt>
-                                    <dd class="text-lg font-semibold text-gray-900">
+                                    <dd class="text-2xl font-semibold text-gray-900">
                                         <?php
                                         $stmt = $conn->prepare("SELECT COUNT(*) FROM tasks WHERE user_id = ?");
                                         $stmt->execute([$_SESSION['user_id']]);
@@ -151,11 +186,11 @@ $upcoming_tasks = $stmt->fetchAll();
                 </div>
 
                 <!-- Upcoming Tasks Card -->
-                <div class="bg-white overflow-hidden shadow rounded-lg transform transition duration-500 hover:scale-105">
-                    <div class="p-5">
+                <div class="bg-white/90 backdrop-blur-md overflow-hidden shadow-lg rounded-xl transform transition duration-500 hover:scale-105 hover:shadow-xl animate-slide-up" style="animation-delay: 0.4s">
+                    <div class="p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-secondary-100 rounded-md p-3">
+                                <div class="bg-secondary-100 rounded-xl p-3">
                                     <svg class="h-6 w-6 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                     </svg>
@@ -166,7 +201,7 @@ $upcoming_tasks = $stmt->fetchAll();
                                     <dt class="text-sm font-medium text-gray-500 truncate">
                                         Upcoming Tasks
                                     </dt>
-                                    <dd class="text-lg font-semibold text-gray-900">
+                                    <dd class="text-2xl font-semibold text-gray-900">
                                         <?php
                                         $stmt = $conn->prepare("SELECT COUNT(*) FROM tasks WHERE user_id = ? AND due_date >= CURDATE() AND status != 'completed'");
                                         $stmt->execute([$_SESSION['user_id']]);
@@ -180,11 +215,11 @@ $upcoming_tasks = $stmt->fetchAll();
                 </div>
 
                 <!-- Completed Tasks Card -->
-                <div class="bg-white overflow-hidden shadow rounded-lg transform transition duration-500 hover:scale-105">
-                    <div class="p-5">
+                <div class="bg-white/90 backdrop-blur-md overflow-hidden shadow-lg rounded-xl transform transition duration-500 hover:scale-105 hover:shadow-xl animate-slide-up" style="animation-delay: 0.5s">
+                    <div class="p-6">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-green-100 rounded-md p-3">
+                                <div class="bg-green-100 rounded-xl p-3">
                                     <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
@@ -195,7 +230,7 @@ $upcoming_tasks = $stmt->fetchAll();
                                     <dt class="text-sm font-medium text-gray-500 truncate">
                                         Completed Tasks
                                     </dt>
-                                    <dd class="text-lg font-semibold text-gray-900">
+                                    <dd class="text-2xl font-semibold text-gray-900">
                                         <?php
                                         $stmt = $conn->prepare("SELECT COUNT(*) FROM tasks WHERE user_id = ? AND status = 'completed'");
                                         $stmt->execute([$_SESSION['user_id']]);
@@ -210,23 +245,28 @@ $upcoming_tasks = $stmt->fetchAll();
             </div>
 
             <!-- Upcoming Tasks Section -->
-            <div class="mt-8">
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+            <div class="mt-8 animate-slide-up" style="animation-delay: 0.6s">
+                <div class="bg-white/90 backdrop-blur-md shadow-lg rounded-xl">
+                    <div class="px-6 py-5">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">
                             Upcoming Tasks
                         </h3>
                         <?php if (empty($upcoming_tasks)): ?>
-                            <p class="text-gray-500 text-center py-4">No upcoming tasks. Create a new task to get started!</p>
+                            <div class="text-center py-8">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                                <p class="mt-2 text-gray-500">No upcoming tasks. Create a new task to get started!</p>
+                            </div>
                         <?php else: ?>
                             <div class="flow-root">
                                 <ul class="-my-5 divide-y divide-gray-200">
                                     <?php foreach ($upcoming_tasks as $task): ?>
-                                        <li class="py-4">
+                                        <li class="py-4 hover:bg-gray-50 transition-colors duration-200">
                                             <div class="flex items-center space-x-4">
                                                 <div class="flex-shrink-0">
-                                                    <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                                                        <svg class="h-5 w-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
+                                                        <svg class="h-6 w-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                                         </svg>
                                                     </div>
@@ -240,7 +280,7 @@ $upcoming_tasks = $stmt->fetchAll();
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                                                         <?php
                                                         switch ($task['priority']) {
                                                             case 'high':
@@ -268,30 +308,38 @@ $upcoming_tasks = $stmt->fetchAll();
             </div>
 
             <!-- Quick Actions -->
-            <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <a href="tasks/create.php" class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-primary-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <span class="absolute inset-0" aria-hidden="true"></span>
-                        <p class="text-sm font-medium text-gray-900">Create New Task</p>
-                        <p class="text-sm text-gray-500">Add a new task to your list</p>
+            <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 animate-slide-up" style="animation-delay: 0.7s">
+                <a href="tasks/create.php" class="group relative rounded-xl border-2 border-dashed border-gray-300 bg-white/90 backdrop-blur-md px-6 py-8 shadow-sm hover:border-primary-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500 transition-all duration-300 hover:shadow-lg">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="h-12 w-12 rounded-xl bg-primary-100 flex items-center justify-center group-hover:bg-primary-200 transition-colors">
+                                <svg class="h-6 w-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="absolute inset-0" aria-hidden="true"></span>
+                            <p class="text-lg font-medium text-gray-900">Create New Task</p>
+                            <p class="text-sm text-gray-500">Add a new task to your list</p>
+                        </div>
                     </div>
                 </a>
 
-                <a href="tasks/list.php" class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-primary-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <span class="absolute inset-0" aria-hidden="true"></span>
-                        <p class="text-sm font-medium text-gray-900">View All Tasks</p>
-                        <p class="text-sm text-gray-500">See your complete task list</p>
+                <a href="tasks/list.php" class="group relative rounded-xl border-2 border-dashed border-gray-300 bg-white/90 backdrop-blur-md px-6 py-8 shadow-sm hover:border-secondary-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-secondary-500 transition-all duration-300 hover:shadow-lg">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="h-12 w-12 rounded-xl bg-secondary-100 flex items-center justify-center group-hover:bg-secondary-200 transition-colors">
+                                <svg class="h-6 w-6 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="absolute inset-0" aria-hidden="true"></span>
+                            <p class="text-lg font-medium text-gray-900">View All Tasks</p>
+                            <p class="text-sm text-gray-500">See your complete task list</p>
+                        </div>
                     </div>
                 </a>
             </div>
@@ -299,7 +347,7 @@ $upcoming_tasks = $stmt->fetchAll();
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-8">
+    <footer class="bg-white/90 backdrop-blur-md border-t border-gray-200 mt-8 animate-fade-in">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div class="text-center text-sm text-gray-500">
                 <p>&copy; <?php echo date('Y'); ?> TaskReminder. All rights reserved.</p>
@@ -307,6 +355,8 @@ $upcoming_tasks = $stmt->fetchAll();
         </div>
     </footer>
 
+    <!-- Alpine.js for dropdown functionality -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
