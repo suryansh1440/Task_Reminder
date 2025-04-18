@@ -1,14 +1,23 @@
 <?php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'task');
 
-try {
-    $conn = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+$db_config = [
+    'host' => 'localhost',    
+    'user' => 'root',         
+    'pass' => '',             
+    'name' => 'task'          
+];
+
+    $conn = new PDO(
+        "mysql:host={$db_config['host']};dbname={$db_config['name']}", 
+        $db_config['user'], 
+        $db_config['pass']
+    );
+    
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
-    die();
-}
+    
+    $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    
+    $conn->exec("SET NAMES utf8");
+    
+
 ?> 

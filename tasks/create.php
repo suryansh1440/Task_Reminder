@@ -2,13 +2,11 @@
 session_start();
 require_once '../config/database.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-// Get user data from database
 $stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
