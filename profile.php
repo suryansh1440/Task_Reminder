@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if ($new_password === $confirm_password) {
                     // Update password
                     $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-                    $stmt = $conn->prepare("UPDATE usergti s SET password = ? WHERE id = ?");
+                    $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
                     $stmt->execute([$password_hash, $_SESSION['user_id']]);
                     $_SESSION['success_message'] = "Password updated successfully.";
                 } else {

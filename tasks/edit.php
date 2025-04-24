@@ -2,11 +2,13 @@
 session_start();
 require_once '../config/database.php';
 
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
+// Get user data from database
 $stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
@@ -17,6 +19,7 @@ if (!$task_id) {
     exit();
 }
 
+// Get task data
 $stmt = $conn->prepare("SELECT * FROM tasks WHERE id = ? AND user_id = ?");
 $stmt->execute([$task_id, $_SESSION['user_id']]);
 $task = $stmt->fetch();
@@ -26,6 +29,8 @@ if (!$task) {
     exit();
 }
 
+$error = '';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $title = $_POST['title'];
     $description = $_POST['description'];
@@ -33,12 +38,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $reminder_time = $_POST['reminder_time'];
     $priority = $_POST['priority'];
 
-    // Update task
-    $stmt = $conn->prepare("UPDATE tasks SET title = ?, description = ?, due_date = ?, reminder_time = ?, priority = ? WHERE id = ? AND user_id = ?");
-    $stmt->execute([$title, $description, $due_date, $reminder_time, $priority, $task_id, $_SESSION['user_id']]);
+    // Validate date and time
+    $currentDateTime = date('Y-m-d H:i:s');
+    $inputDateTime = $due_date . ' ' . $reminder_time;
 
-    header("Location: list.php");
-    exit();
+    if (strtotime($inputDateTime) < strtotime($currentDateTime)) {
+        $error = "The due date and time cannot be less than the current date and time.";
+    } else {
+        // Validate other fields
+        if (empty($title)) {
+            $error = "Title is required.";
+        } elseif (empty($due_date)) {
+            $error = "Due date is required.";
+        } elseif (empty($reminder_time)) {
+            $error = "Reminder time is required.";
+        } else {
+            try {
+                // Update task
+                $stmt = $conn->prepare("UPDATE tasks SET title = ?, description = ?, due_date = ?, reminder_time = ?, priority = ?, updated_at = NOW() WHERE id = ? AND user_id = ?");
+                $stmt->execute([$title, $description, $due_date, $reminder_time, $priority, $task_id, $_SESSION['user_id']]);
+
+                header("Location: list.php");
+                exit();
+            } catch (PDOException $e) {
+                $error = "Error updating task: " . $e->getMessage();
+            }
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -176,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </a>
             </div>
                     
-                    <?php if (isset($error)): ?>
+                    <?php if ($error): ?>
                 <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg animate-fade-in" role="alert">
                     <div class="flex">
                         <div class="flex-shrink-0">

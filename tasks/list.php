@@ -2,43 +2,49 @@
 session_start();
 require_once '../config/database.php';
 
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
+// Get user data from database
 $stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
 
+// Get filter parameters
 $search = $_GET['search'] ?? '';
 $priority_filter = $_GET['priority'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
+// Build the query
 $query = "SELECT * FROM tasks WHERE user_id = ?";
 $params = [$_SESSION['user_id']];
 
+// Add search condition
 if (!empty($search)) {
     $query .= " AND (title LIKE ? OR description LIKE ?)";
     $params[] = "%$search%";
     $params[] = "%$search%";
 }
 
+// Add priority filter
 if (!empty($priority_filter)) {
     $query .= " AND priority = ?";
     $params[] = $priority_filter;
 }
 
-
+// Add status filter
 if (!empty($status_filter)) {
     $query .= " AND status = ?";
     $params[] = $status_filter;
 }
 
-
+// Add sorting
 $query .= " ORDER BY due_date ASC";
 
-
+// Get tasks
 $stmt = $conn->prepare($query);
 $stmt->execute($params);
 $tasks = $stmt->fetchAll();

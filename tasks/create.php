@@ -2,29 +2,52 @@
 session_start();
 require_once '../config/database.php';
 
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
+// Get user data from database
 $stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = $_POST['title'];
-    $description = $_POST['description'];
-    $due_date = $_POST['due_date'];
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title = trim($_POST['title']);
+    $description = trim($_POST['description']);
+    $due_date = trim($_POST['due_date']);
+    $reminder_time = trim($_POST['reminder_time']);
     $priority = $_POST['priority'];
-    $reminder_time = $_POST['reminder_time'];
     $user_id = $_SESSION['user_id'];
 
-    $stmt = $conn->prepare("INSERT INTO tasks (user_id, title, description, due_date, priority, reminder_time, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')");
-    if ($stmt->execute([$user_id, $title, $description, $due_date, $priority, $reminder_time])) {
-        header("Location: list.php");
-        exit();
+    // Validate date and time
+    $currentDateTime = date('Y-m-d H:i:s');
+    $inputDateTime = $due_date . ' ' . $reminder_time;
+
+    if (strtotime($inputDateTime) < strtotime($currentDateTime)) {
+        $error = "The due date and time cannot be less than the current date and time.";
     } else {
-        $error = "Failed to create task. Please try again.";
+        // Validate other fields
+        if (empty($title)) {
+            $error = "Title is required.";
+        } elseif (empty($due_date)) {
+            $error = "Due date is required.";
+        } elseif (empty($reminder_time)) {
+            $error = "Reminder time is required.";
+        } else {
+            try {
+                $stmt = $conn->prepare("INSERT INTO tasks (user_id, title, description, due_date, reminder_time, priority, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())");
+                $stmt->execute([$user_id, $title, $description, $due_date, $reminder_time, $priority]);
+                
+                header('Location: list.php');
+                exit;
+            } catch (PDOException $e) {
+                $error = "Error creating task: " . $e->getMessage();
+            }
+        }
     }
 }
 ?>
@@ -163,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </a>
             </div>
                     
-                    <?php if (isset($error)): ?>
+                    <?php if ($error): ?>
                 <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg animate-fade-in" role="alert">
                     <div class="flex">
                         <div class="flex-shrink-0">
@@ -183,7 +206,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <label for="title" class="block text-sm font-medium text-gray-700">Task Title</label>
                     <div class="mt-1">
                         <input type="text" name="title" id="title" required 
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200">
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200"
+                            value="<?php echo isset($_POST['title']) ? htmlspecialchars($_POST['title']) : ''; ?>">
                     </div>
                         </div>
 
@@ -191,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
                     <div class="mt-1">
                         <textarea name="description" id="description" rows="3" required 
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200"></textarea>
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200"><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
                     </div>
                 </div>
 
@@ -200,7 +224,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <label for="due_date" class="block text-sm font-medium text-gray-700">Due Date</label>
                         <div class="mt-1">
                             <input type="date" name="due_date" id="due_date" required 
-                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200">
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200"
+                                min="<?php echo date('Y-m-d'); ?>"
+                                value="<?php echo isset($_POST['due_date']) ? htmlspecialchars($_POST['due_date']) : ''; ?>">
                         </div>
                         </div>
 
@@ -208,7 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <label for="reminder_time" class="block text-sm font-medium text-gray-700">Reminder Time</label>
                         <div class="mt-1">
                             <input type="time" name="reminder_time" id="reminder_time" required 
-                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200">
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200"
+                                value="<?php echo isset($_POST['reminder_time']) ? htmlspecialchars($_POST['reminder_time']) : ''; ?>">
                         </div>
                     </div>
                         </div>
@@ -218,9 +245,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="mt-1">
                         <select name="priority" id="priority" required 
                             class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200">
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
+                                <option value="low" <?php echo (isset($_POST['priority']) && $_POST['priority'] === 'low') ? 'selected' : ''; ?>>Low</option>
+                                <option value="medium" <?php echo (isset($_POST['priority']) && $_POST['priority'] === 'medium') ? 'selected' : ''; ?>>Medium</option>
+                                <option value="high" <?php echo (isset($_POST['priority']) && $_POST['priority'] === 'high') ? 'selected' : ''; ?>>High</option>
                             </select>
                         </div>
                         </div>
